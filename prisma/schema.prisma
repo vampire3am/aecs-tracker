@@ -1,0 +1,491 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  ADMIN
+  MANAGER
+  EMPLOYEE
+}
+
+enum WorkLocation {
+  REMOTE
+  OFFICE
+  HYBRID
+}
+
+enum SessionStatus {
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
+enum BreakType {
+  LUNCH
+  SHORT_BREAK
+  PERSONAL
+  MEETING
+  OTHER
+}
+
+enum ProjectStatus {
+  PLANNING
+  ACTIVE
+  ON_HOLD
+  COMPLETED
+  ARCHIVED
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  BLOCKED
+  REVIEW
+  COMPLETED
+  CANCELLED
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum WorkCategory {
+  DEVELOPMENT
+  BUG_FIX
+  DEBUGGING
+  TESTING
+  CODE_REVIEW
+  DOCUMENTATION
+  DEPLOYMENT
+  RESEARCH
+  MEETING
+  MAINTENANCE
+  ARCHITECTURE
+  LEARNING
+  OTHER
+}
+
+enum MeetingType {
+  STANDUP
+  PLANNING
+  CODE_REVIEW
+  ARCHITECTURE
+  CLIENT
+  TEAM
+  ONE_ON_ONE
+  OTHER
+}
+
+enum BlockerStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CANCELLED
+}
+
+enum ReportStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
+}
+
+model User {
+  id                   String            @id @default(uuid())
+  email                String            @unique
+  passwordHash         String
+  name                 String
+  employeeId           String            @unique
+  jobTitle             String
+  department           String
+  workLocation         WorkLocation      @default(REMOTE)
+  role                 Role              @default(EMPLOYEE)
+  timezone             String            @default("UTC")
+  workingHoursPerDay   Float             @default(8.0)
+  avatarUrl            String?
+  joiningDate          DateTime          @default(now())
+  
+  teamId               String?
+  team                 Team?             @relation("TeamMembers", fields: [teamId], references: [id], onDelete: SetNull)
+  managedTeams         Team[]            @relation("TeamLead")
+
+  managerId            String?
+  manager              User?             @relation("UserManagement", fields: [managerId], references: [id], onDelete: SetNull)
+  subordinates         User[]            @relation("UserManagement")
+
+  projectMemberships   ProjectMember[]
+  ownedProjects        Project[]         @relation("ProjectOwner")
+  assignedTasks        Task[]            @relation("AssignedTasks")
+  createdTasks         Task[]            @relation("CreatedTasks")
+  workSessions         WorkSession[]
+  breaks               Break[]
+  workLogs             WorkLog[]
+  meetings             Meeting[]
+  blockers             Blocker[]
+  achievements         Achievement[]
+  dailyReports         DailyReport[]
+  weeklyReports        WeeklyReport[]
+  monthlyReports       MonthlyReport[]
+  notifications        Notification[]
+  notificationPref     NotificationPreference?
+  auditLogs            AuditLog[]
+
+  createdAt            DateTime          @default(now())
+  updatedAt            DateTime          @updatedAt
+
+  @@index([role])
+  @@index([teamId])
+  @@index([managerId])
+  @@index([employeeId])
+}
+
+model Team {
+  id          String    @id @default(uuid())
+  name        String    @unique
+  description String?
+  leadId      String?
+  lead        User?     @relation("TeamLead", fields: [leadId], references: [id], onDelete: SetNull)
+  members     User[]    @relation("TeamMembers")
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([leadId])
+}
+
+model Project {
+  id            String          @id @default(uuid())
+  name          String
+  projectKey    String          @unique
+  description   String?
+  status        ProjectStatus   @default(ACTIVE)
+  priority      Priority        @default(MEDIUM)
+  ownerId       String?
+  owner         User?           @relation("ProjectOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+  startDate     DateTime?
+  targetEndDate DateTime?
+  members       ProjectMember[]
+  tasks         Task[]
+  workLogs      WorkLog[]
+  meetings      Meeting[]
+  blockers      Blocker[]
+  achievements  Achievement[]
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  @@index([status])
+  @@index([ownerId])
+  @@index([projectKey])
+}
+
+model ProjectMember {
+  id        String   @id @default(uuid())
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      String   @default("Member")
+  createdAt DateTime @default(now())
+
+  @@unique([projectId, userId])
+  @@index([userId])
+  @@index([projectId])
+}
+
+model Task {
+  id             String       @id @default(uuid())
+  title          String
+  description    String?
+  projectId      String
+  project        Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  assigneeId     String?
+  assignee       User?        @relation("AssignedTasks", fields: [assigneeId], references: [id], onDelete: SetNull)
+  creatorId      String?
+  creator        User?        @relation("CreatedTasks", fields: [creatorId], references: [id], onDelete: SetNull)
+  status         TaskStatus   @default(TODO)
+  priority       Priority     @default(MEDIUM)
+  estimatedHours Float?
+  actualHours    Float        @default(0.0)
+  dueDate        DateTime?
+  completedAt    DateTime?
+  gitBranch      String?
+  externalRef    String?
+  workLogs       WorkLog[]
+  blockers       Blocker[]
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@index([projectId])
+  @@index([assigneeId])
+  @@index([status])
+  @@index([priority])
+}
+
+model WorkSession {
+  id                 String        @id @default(uuid())
+  userId             String
+  user               User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workDate           String        // YYYY-MM-DD in employee's timezone
+  startedAt          DateTime      @default(now())
+  endedAt            DateTime?
+  status             SessionStatus @default(ACTIVE)
+  totalDurationSec   Int           @default(0)
+  breakDurationSec   Int           @default(0)
+  netWorkDurationSec Int           @default(0)
+  notes              String?
+  breaks             Break[]
+  workLogs           WorkLog[]
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+
+  @@index([userId, status])
+  @@index([userId, workDate])
+  @@index([startedAt])
+}
+
+model Break {
+  id            String       @id @default(uuid())
+  workSessionId String
+  workSession   WorkSession  @relation(fields: [workSessionId], references: [id], onDelete: Cascade)
+  userId        String
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  breakType     BreakType    @default(SHORT_BREAK)
+  startedAt     DateTime     @default(now())
+  endedAt       DateTime?
+  durationSec   Int          @default(0)
+  notes         String?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  @@index([workSessionId])
+  @@index([userId])
+  @@index([startedAt])
+}
+
+model WorkLog {
+  id             String        @id @default(uuid())
+  userId         String
+  user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  projectId      String
+  project        Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  taskId         String?
+  task           Task?         @relation(fields: [taskId], references: [id], onDelete: SetNull)
+  workSessionId  String?
+  workSession    WorkSession?  @relation(fields: [workSessionId], references: [id], onDelete: SetNull)
+  startedAt      DateTime      @default(now())
+  endedAt        DateTime?
+  durationSec    Int           @default(0)
+  category       WorkCategory  @default(DEVELOPMENT)
+  description    String
+  status         String        @default("COMPLETED") // COMPLETED, IN_PROGRESS
+  notes          String?
+  externalRef    String?
+  isTimerRunning Boolean       @default(false)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@index([userId, startedAt])
+  @@index([projectId])
+  @@index([taskId])
+  @@index([workSessionId])
+  @@index([category])
+}
+
+model Meeting {
+  id          String      @id @default(uuid())
+  userId      String
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  projectId   String?
+  project     Project?    @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  title       String
+  description String?
+  startedAt   DateTime
+  endedAt     DateTime
+  durationSec Int         @default(0)
+  meetingType MeetingType @default(TEAM)
+  notes       String?
+  externalUrl String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@index([userId, startedAt])
+  @@index([projectId])
+}
+
+model Blocker {
+  id              String        @id @default(uuid())
+  userId          String
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  projectId       String?
+  project         Project?      @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  taskId          String?
+  task            Task?         @relation(fields: [taskId], references: [id], onDelete: SetNull)
+  title           String
+  description     String
+  waitingFor      String?
+  impact          String?
+  priority        Priority      @default(HIGH)
+  status          BlockerStatus @default(OPEN)
+  startedAt       DateTime      @default(now())
+  resolvedAt      DateTime?
+  resolutionNotes String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([userId, status])
+  @@index([projectId])
+  @@index([taskId])
+}
+
+model Achievement {
+  id          String    @id @default(uuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  projectId   String?
+  project     Project?  @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  title       String
+  description String
+  category    String    @default("General")
+  date        DateTime  @default(now())
+  notes       String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([userId, date])
+  @@index([projectId])
+}
+
+model DailyReport {
+  id                   String       @id @default(uuid())
+  userId               String
+  user                 User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workDate             String       // YYYY-MM-DD
+  startedAt            DateTime?
+  endedAt              DateTime?
+  totalSessionSec      Int          @default(0)
+  totalBreakSec        Int          @default(0)
+  netWorkSec           Int          @default(0)
+  completedWorkJson    String       @default("[]")
+  inProgressJson       String       @default("[]")
+  pendingTasksJson     String       @default("[]")
+  meetingsJson         String       @default("[]")
+  blockersJson         String       @default("[]")
+  achievementsJson     String       @default("[]")
+  notes                String?
+  recommendedNextSteps String?
+  status               ReportStatus @default(DRAFT)
+  submittedAt          DateTime?
+  isAutoGenerated      Boolean      @default(true)
+  isUserEdited         Boolean      @default(false)
+  createdAt            DateTime     @default(now())
+  updatedAt            DateTime     @updatedAt
+
+  @@unique([userId, workDate])
+  @@index([userId, workDate])
+  @@index([status])
+}
+
+model WeeklyReport {
+  id                       String       @id @default(uuid())
+  userId                   String
+  user                     User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  weekStartDate            String       // YYYY-MM-DD
+  weekEndDate              String       // YYYY-MM-DD
+  totalWorkingSec          Int          @default(0)
+  totalBreakSec            Int          @default(0)
+  netWorkSec               Int          @default(0)
+  workingDaysCount         Int          @default(0)
+  completedTasksCount      Int          @default(0)
+  pendingTasksCount        Int          @default(0)
+  projectsJson             String       @default("[]")
+  meetingsJson             String       @default("[]")
+  blockersJson             String       @default("[]")
+  accomplishments          String?
+  categoryDistributionJson String       @default("{}")
+  plannedNextWeek          String?
+  status                   ReportStatus @default(DRAFT)
+  submittedAt              DateTime?
+  isAutoGenerated          Boolean      @default(true)
+  isUserEdited             Boolean      @default(false)
+  createdAt                DateTime     @default(now())
+  updatedAt                DateTime     @updatedAt
+
+  @@unique([userId, weekStartDate])
+  @@index([userId, weekStartDate])
+}
+
+model MonthlyReport {
+  id                       String       @id @default(uuid())
+  userId                   String
+  user                     User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  year                     Int
+  month                    Int          // 1-12
+  totalWorkingSec          Int          @default(0)
+  avgDailyHours            Float        @default(0.0)
+  workingDaysCount         Int          @default(0)
+  completedTasksCount      Int          @default(0)
+  carriedOverCount         Int          @default(0)
+  projectsJson             String       @default("[]")
+  categoryDistributionJson String       @default("{}")
+  meetingSec               Int          @default(0)
+  blockerCount             Int          @default(0)
+  accomplishments          String?
+  trendsNotes              String?
+  status                   ReportStatus @default(DRAFT)
+  createdAt                DateTime     @default(now())
+  updatedAt                DateTime     @updatedAt
+
+  @@unique([userId, year, month])
+  @@index([userId, year, month])
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  message   String
+  type      String   @default("INFO")
+  read      Boolean  @default(false)
+  link      String?
+  createdAt DateTime @default(now())
+
+  @@index([userId, read])
+}
+
+model NotificationPreference {
+  id                     String   @id @default(uuid())
+  userId                 String   @unique
+  user                   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  emailAlerts            Boolean  @default(true)
+  sessionReminders       Boolean  @default(true)
+  blockerAlerts          Boolean  @default(true)
+  deadlineAlerts         Boolean  @default(true)
+  weeklyReportReminders  Boolean  @default(true)
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  action    String
+  entity    String
+  entityId  String?
+  metadata  String?  // JSON string
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([entity, entityId])
+  @@index([action])
+  @@index([createdAt])
+}

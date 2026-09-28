@@ -119,32 +119,29 @@ export default function LoginPage() {
               <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
               <span>Quick Development Login</span>
             </div>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 gap-2">
               <button
                 type="button"
-                onClick={() => handleQuickLogin("dev@aecstracker.internal", "DevPassword123!")}
-                className="p-2 text-left bg-slate-900/60 hover:bg-slate-900 border border-slate-700/60 rounded-lg transition"
+                onClick={() => handleQuickLogin("samshad@aecstracker.internal", "SamshadPassword123!")}
+                className="p-2.5 text-left bg-slate-900/60 hover:bg-slate-900 border border-indigo-500/40 hover:border-indigo-500 rounded-lg transition"
               >
-                <div className="text-[11px] font-bold text-white">Employee</div>
-                <div className="text-[10px] text-slate-400">Alex Rivera</div>
+                <div className="text-[11px] font-bold text-white flex items-center justify-between">
+                  <span>Samshad</span>
+                  <span className="text-[9px] px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300">Admin/Dev</span>
+                </div>
+                <div className="text-[10px] text-slate-400 mt-0.5">samshad@aecstracker.internal</div>
               </button>
 
               <button
                 type="button"
                 onClick={() => handleQuickLogin("manager@aecstracker.internal", "ManagerPassword123!")}
-                className="p-2 text-left bg-slate-900/60 hover:bg-slate-900 border border-slate-700/60 rounded-lg transition"
+                className="p-2.5 text-left bg-slate-900/60 hover:bg-slate-900 border border-slate-700/60 hover:border-slate-500 rounded-lg transition"
               >
-                <div className="text-[11px] font-bold text-white">Manager</div>
-                <div className="text-[10px] text-slate-400">David Chen</div>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleQuickLogin("admin@aecstracker.internal", "AdminPassword123!")}
-                className="p-2 text-left bg-slate-900/60 hover:bg-slate-900 border border-slate-700/60 rounded-lg transition"
-              >
-                <div className="text-[11px] font-bold text-white">Admin</div>
-                <div className="text-[10px] text-slate-400">Sarah Jenkins</div>
+                <div className="text-[11px] font-bold text-white flex items-center justify-between">
+                  <span>Manager</span>
+                  <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300">Manager</span>
+                </div>
+                <div className="text-[10px] text-slate-400 mt-0.5">manager@aecstracker.internal</div>
               </button>
             </div>
           </div>

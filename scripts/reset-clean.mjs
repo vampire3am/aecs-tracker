@@ -4,7 +4,7 @@ import bcrypt from "bcryptjs";
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log("Cleaning all data from AECS TRACKER database...");
+  console.log("Cleaning all dummy data from AECS TRACKER database...");
 
   // 1. Delete all transactional records in dependency order
   await prisma.auditLog.deleteMany({});
@@ -25,7 +25,7 @@ async function main() {
   await prisma.user.deleteMany({});
   await prisma.team.deleteMany({});
 
-  console.log("Database wiped clean.");
+  console.log("All dummy data deleted successfully.");
 
   // 2. Hash passwords
   const samshadPasswordHash = await bcrypt.hash("SamshadPassword123!", 10);
@@ -66,7 +66,7 @@ async function main() {
       jobTitle: "Software Engineer",
       department: "Engineering",
       workLocation: WorkLocation.REMOTE,
-      role: Role.ADMIN, // Admin so Samshad has full access across all platform modules
+      role: Role.ADMIN, // Admin so Samshad has full superpowers across the entire platform
       timezone: "America/New_York",
       workingHoursPerDay: 8.0,
       managerId: manager.id,
@@ -97,11 +97,16 @@ async function main() {
   console.log("- User: Manager (manager@aecstracker.internal / ManagerPassword123!)");
   console.log("- Team: Engineering Team");
   console.log("- Project: AECS Platform (AECS)");
+  console.log("- Work Sessions: 0");
+  console.log("- Work Logs: 0");
+  console.log("- Tasks: 0");
+  console.log("- Blockers: 0");
+  console.log("- Reports: 0");
 }
 
 main()
   .catch((e) => {
-    console.error("Error executing seed:", e);
+    console.error("Error executing clean script:", e);
     process.exit(1);
   })
   .finally(async () => {

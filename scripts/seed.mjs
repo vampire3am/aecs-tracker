@@ -4,59 +4,56 @@ import bcrypt from "bcryptjs";
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log("Cleaning all data from AECS TRACKER database...");
+  console.log("Checking AECS TRACKER database initialization...");
 
-  // 1. Delete all transactional records in dependency order
-  await prisma.auditLog.deleteMany({});
-  await prisma.notification.deleteMany({});
-  await prisma.notificationPreference.deleteMany({});
-  await prisma.dailyReport.deleteMany({});
-  await prisma.weeklyReport.deleteMany({});
-  await prisma.monthlyReport.deleteMany({});
-  await prisma.achievement.deleteMany({});
-  await prisma.blocker.deleteMany({});
-  await prisma.meeting.deleteMany({});
-  await prisma.workLog.deleteMany({});
-  await prisma.break.deleteMany({});
-  await prisma.workSession.deleteMany({});
-  await prisma.task.deleteMany({});
-  await prisma.projectMember.deleteMany({});
-  await prisma.project.deleteMany({});
-  await prisma.user.deleteMany({});
-  await prisma.team.deleteMany({});
+  // Check if Samshad user already exists
+  const existingUser = await prisma.user.findFirst({
+    where: { email: "samshad@aecstracker.internal" },
+  });
 
-  console.log("Database wiped clean.");
+  if (existingUser) {
+    console.log("Database already initialized with Samshad account. Skipping seed.");
+    return;
+  }
 
-  // 2. Hash passwords
+  console.log("Initializing database with clean Samshad and Manager accounts...");
+
+  // Hash passwords
   const samshadPasswordHash = await bcrypt.hash("SamshadPassword123!", 10);
   const managerPasswordHash = await bcrypt.hash("ManagerPassword123!", 10);
 
-  // 3. Create Engineering Team
-  const team = await prisma.team.create({
-    data: {
-      name: "Engineering Team",
-      description: "Product development, architecture, and engineering delivery.",
-    },
-  });
+  // 1. Create Engineering Team
+  let team = await prisma.team.findFirst({ where: { name: "Engineering Team" } });
+  if (!team) {
+    team = await prisma.team.create({
+      data: {
+        name: "Engineering Team",
+        description: "Product development, architecture, and engineering delivery.",
+      },
+    });
+  }
 
-  // 4. Create Manager User
-  const manager = await prisma.user.create({
-    data: {
-      name: "Manager",
-      email: "manager@aecstracker.internal",
-      passwordHash: managerPasswordHash,
-      employeeId: "AECS-MGR-001",
-      jobTitle: "Engineering Manager",
-      department: "Engineering",
-      workLocation: WorkLocation.REMOTE,
-      role: Role.MANAGER,
-      timezone: "America/New_York",
-      workingHoursPerDay: 8.0,
-      teamId: team.id,
-    },
-  });
+  // 2. Create Manager User
+  let manager = await prisma.user.findFirst({ where: { email: "manager@aecstracker.internal" } });
+  if (!manager) {
+    manager = await prisma.user.create({
+      data: {
+        name: "Manager",
+        email: "manager@aecstracker.internal",
+        passwordHash: managerPasswordHash,
+        employeeId: "AECS-MGR-001",
+        jobTitle: "Engineering Manager",
+        department: "Engineering",
+        workLocation: WorkLocation.REMOTE,
+        role: Role.MANAGER,
+        timezone: "America/New_York",
+        workingHoursPerDay: 8.0,
+        teamId: team.id,
+      },
+    });
+  }
 
-  // 5. Create Samshad User (Lead Engineer & Admin access)
+  // 3. Create Samshad User (Lead Engineer & Admin access)
   const samshad = await prisma.user.create({
     data: {
       name: "Samshad",
@@ -74,25 +71,27 @@ async function main() {
     },
   });
 
-  // 6. Create clean initial Project
-  const project = await prisma.project.create({
-    data: {
-      name: "AECS Platform",
-      projectKey: "AECS",
-      description: "Core software engineering and feature delivery.",
-      status: ProjectStatus.ACTIVE,
-    },
-  });
+  // 4. Create clean initial Project
+  let project = await prisma.project.findFirst({ where: { projectKey: "AECS" } });
+  if (!project) {
+    project = await prisma.project.create({
+      data: {
+        name: "AECS Platform",
+        projectKey: "AECS",
+        description: "Core software engineering and feature delivery.",
+        status: ProjectStatus.ACTIVE,
+      },
+    });
 
-  // 7. Add Samshad and Manager to the Project
-  await prisma.projectMember.createMany({
-    data: [
-      { projectId: project.id, userId: samshad.id, role: "LEAD" },
-      { projectId: project.id, userId: manager.id, role: "MANAGER" },
-    ],
-  });
+    await prisma.projectMember.createMany({
+      data: [
+        { projectId: project.id, userId: samshad.id, role: "LEAD" },
+        { projectId: project.id, userId: manager.id, role: "MANAGER" },
+      ],
+    });
+  }
 
-  console.log("Database initialized with clean slate:");
+  console.log("Database initialized successfully:");
   console.log("- User: Samshad (samshad@aecstracker.internal / SamshadPassword123!)");
   console.log("- User: Manager (manager@aecstracker.internal / ManagerPassword123!)");
   console.log("- Team: Engineering Team");

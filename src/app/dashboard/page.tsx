@@ -158,17 +158,17 @@ export default function DashboardPage() {
             </p>
           </div>
 
-          <div className="flex items-center gap-2.5">
+          <div className="grid grid-cols-2 sm:flex sm:items-center gap-2.5 w-full sm:w-auto">
             <button
               onClick={() => setIsAddLogOpen(true)}
-              className="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs rounded-lg shadow-sm transition flex items-center gap-1.5"
+              className="min-h-[42px] px-3.5 py-2.5 bg-indigo-600 active:bg-indigo-700 hover:bg-indigo-700 text-white font-semibold text-xs rounded-xl shadow-sm transition flex items-center justify-center gap-1.5 touch-manipulation"
             >
               <Plus className="w-3.5 h-3.5" />
               Add Work Log
             </button>
             <Link
               href="/reports"
-              className="px-3.5 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-semibold text-xs rounded-lg transition flex items-center gap-1.5"
+              className="min-h-[42px] px-3.5 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 active:bg-slate-100 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-semibold text-xs rounded-xl transition flex items-center justify-center gap-1.5 touch-manipulation"
             >
               <FileText className="w-3.5 h-3.5 text-indigo-500" />
               View Today&apos;s Report

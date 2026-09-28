@@ -43,24 +43,24 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-900 flex flex-col justify-center items-center p-6 selection:bg-indigo-500 selection:text-white">
+    <div className="min-h-screen min-h-[100dvh] bg-slate-900 flex flex-col justify-center items-center p-4 sm:p-6 pt-safe pb-safe selection:bg-indigo-500 selection:text-white">
       {/* Background radial glow */}
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-indigo-600/10 rounded-full blur-[120px] pointer-events-none" />
 
       <div className="max-w-md w-full relative z-10">
         {/* Brand Header */}
-        <div className="text-center mb-8">
-          <div className="inline-flex w-12 h-12 rounded-xl bg-indigo-600 items-center justify-center text-white font-black text-2xl shadow-lg shadow-indigo-600/30 mb-4">
+        <div className="text-center mb-6 sm:mb-8">
+          <div className="inline-flex w-12 h-12 rounded-2xl bg-indigo-600 items-center justify-center text-white font-black text-2xl shadow-lg shadow-indigo-600/30 mb-3 sm:mb-4">
             A
           </div>
           <h1 className="text-2xl font-black text-white tracking-tight">AECS TRACKER</h1>
-          <p className="text-sm text-slate-400 mt-1">
+          <p className="text-xs sm:text-sm text-slate-400 mt-1">
             Enterprise Work-Tracking & Management Platform
           </p>
         </div>
 
         {/* Login Card */}
-        <div className="bg-slate-800/80 backdrop-blur-xl border border-slate-700/60 rounded-2xl p-8 shadow-2xl">
+        <div className="bg-slate-800/80 backdrop-blur-xl border border-slate-700/60 rounded-2xl p-5 sm:p-8 shadow-2xl">
           <h2 className="text-lg font-bold text-white mb-2">Sign in to your account</h2>
           <p className="text-xs text-slate-400 mb-6">
             Enter your employee credentials to access your daily workspace.

@@ -66,7 +66,7 @@ export function Sidebar({ user }: { user: UserInfo | null }) {
   ];
 
   return (
-    <aside className="w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col justify-between shrink-0 h-screen sticky top-0 select-none">
+    <aside className="hidden md:flex w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex-col justify-between shrink-0 h-screen sticky top-0 select-none">
       <div>
         {/* Brand header */}
         <div className="h-16 px-6 flex items-center gap-3 border-b border-slate-200 dark:border-slate-800">

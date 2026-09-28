@@ -110,13 +110,13 @@ export default function SettingsPage() {
 
         <form onSubmit={handleSave} className="space-y-6">
           {/* Employee Information */}
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 shadow-sm">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 sm:p-6 shadow-sm">
             <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
               <User className="w-4 h-4 text-indigo-500" />
               Employee Information
             </h3>
 
-            <div className="grid grid-cols-2 gap-4 text-xs">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
               <div>
                 <label className="text-slate-400 font-semibold block mb-1">Full Name</label>
                 <div className="p-2.5 bg-slate-50 dark:bg-slate-800 rounded-lg text-slate-900 dark:text-white font-medium">
@@ -133,7 +133,7 @@ export default function SettingsPage() {
 
               <div>
                 <label className="text-slate-400 font-semibold block mb-1">Email</label>
-                <div className="p-2.5 bg-slate-50 dark:bg-slate-800 rounded-lg text-slate-900 dark:text-white font-mono">
+                <div className="p-2.5 bg-slate-50 dark:bg-slate-800 rounded-lg text-slate-900 dark:text-white font-mono truncate">
                   {user?.email || "--"}
                 </div>
               </div>
@@ -253,11 +253,11 @@ export default function SettingsPage() {
             </div>
           </div>
 
-          <div className="flex justify-end">
+          <div className="flex justify-end w-full">
             <button
               type="submit"
               disabled={saving}
-              className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs rounded-lg shadow-sm transition flex items-center gap-2 disabled:opacity-50"
+              className="min-h-[44px] w-full sm:w-auto px-6 py-3 bg-indigo-600 active:bg-indigo-700 hover:bg-indigo-700 text-white font-semibold text-xs rounded-xl shadow-sm transition flex items-center justify-center gap-2 disabled:opacity-50 touch-manipulation"
             >
               {saving && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
               {saving ? "Saving to Database..." : "Save Preferences"}

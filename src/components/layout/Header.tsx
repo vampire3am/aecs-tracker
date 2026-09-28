@@ -1,13 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Bell, Globe, Sun, Moon, Check, Clock } from "lucide-react";
+import { Bell, Globe, Sun, Moon, Check, Clock, Menu } from "lucide-react";
 
 interface HeaderProps {
   userTimezone?: string;
+  onMenuClick?: () => void;
 }
 
-export function Header({ userTimezone = "UTC" }: HeaderProps) {
+export function Header({ userTimezone = "UTC", onMenuClick }: HeaderProps) {
   const [currentTime, setCurrentTime] = useState<string>("");
   const [notifications, setNotifications] = useState<any[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -69,19 +70,43 @@ export function Header({ userTimezone = "UTC" }: HeaderProps) {
   };
 
   return (
-    <header className="h-16 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-6 flex items-center justify-between sticky top-0 z-30">
-      <div className="flex items-center gap-3">
-        <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-md">
-          <Globe className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
-          <span>{userTimezone}</span>
+    <header className="h-16 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-4 sm:px-6 flex items-center justify-between sticky top-0 z-30 pt-safe">
+      <div className="flex items-center gap-2 sm:gap-3">
+        {/* Mobile Hamburger menu */}
+        {onMenuClick && (
+          <button
+            onClick={onMenuClick}
+            aria-label="Open mobile menu"
+            className="md:hidden p-2 -ml-1 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition"
+          >
+            <Menu className="w-5 h-5" />
+          </button>
+        )}
+
+        {/* Mobile App Brand Badge */}
+        <div className="md:hidden flex items-center gap-1.5 mr-1">
+          <div className="w-7 h-7 rounded-md bg-indigo-600 flex items-center justify-center text-white font-bold text-xs shadow-sm">
+            A
+          </div>
+          <span className="font-extrabold text-sm text-slate-900 dark:text-white tracking-tight">
+            AECS
+          </span>
         </div>
-        <div className="flex items-center gap-1.5 text-xs font-mono text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/80 px-2.5 py-1 rounded-md border border-slate-200/60 dark:border-slate-700/60">
-          <Clock className="w-3.5 h-3.5 text-slate-400" />
-          <span>{currentTime || "--:--:--"}</span>
+
+        {/* Timezone badge (hidden on small mobile screens to prevent overflow) */}
+        <div className="hidden sm:flex items-center gap-1.5 text-xs text-slate-500 font-medium bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-md">
+          <Globe className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+          <span className="truncate max-w-[130px]">{userTimezone}</span>
+        </div>
+
+        {/* Live ticking clock */}
+        <div className="flex items-center gap-1.5 text-xs font-mono text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/80 px-2 sm:px-2.5 py-1 rounded-md border border-slate-200/60 dark:border-slate-700/60">
+          <Clock className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+          <span className="text-[11px] sm:text-xs">{currentTime || "--:--:--"}</span>
         </div>
       </div>
 
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-1.5 sm:gap-3">
         {/* Dark mode button */}
         <button
           onClick={toggleDarkMode}
@@ -105,7 +130,7 @@ export function Header({ userTimezone = "UTC" }: HeaderProps) {
           </button>
 
           {showNotifications && (
-            <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl z-50 p-3">
+            <div className="absolute right-0 mt-2 w-80 max-w-[calc(100vw-2rem)] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl z-50 p-3">
               <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
                 <span className="text-xs font-bold text-slate-900 dark:text-white">Notifications</span>
                 {unreadCount > 0 && (
@@ -117,21 +142,20 @@ export function Header({ userTimezone = "UTC" }: HeaderProps) {
                   </button>
                 )}
               </div>
-              <div className="mt-2 space-y-2 max-h-60 overflow-y-auto">
+
+              <div className="mt-2 divide-y divide-slate-100 dark:divide-slate-800 max-h-64 overflow-y-auto">
                 {notifications.length === 0 ? (
-                  <div className="text-xs text-slate-400 py-4 text-center">No notifications</div>
+                  <div className="py-6 text-center text-xs text-slate-400">
+                    No new notifications
+                  </div>
                 ) : (
                   notifications.map((n) => (
-                    <div
-                      key={n.id}
-                      className={`p-2 rounded-lg text-xs ${
-                        n.read
-                          ? "bg-slate-50 dark:bg-slate-800/40 text-slate-500"
-                          : "bg-indigo-50/60 dark:bg-indigo-950/40 text-slate-800 dark:text-slate-200 border-l-2 border-indigo-600"
-                      }`}
-                    >
-                      <div className="font-semibold text-slate-900 dark:text-slate-100">{n.title}</div>
-                      <div className="mt-0.5 text-slate-600 dark:text-slate-400 text-[11px]">{n.message}</div>
+                    <div key={n.id} className="py-2.5 text-xs">
+                      <div className="font-semibold text-slate-800 dark:text-slate-200">{n.title}</div>
+                      <div className="text-slate-500 mt-0.5">{n.message}</div>
+                      <div className="text-[10px] text-slate-400 mt-1">
+                        {new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </div>
                     </div>
                   ))
                 )}

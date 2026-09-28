@@ -228,12 +228,12 @@ export function WorkSessionWidget({ onAddWorkLogClick, onSessionChange }: WorkSe
           </div>
 
           {/* Time display */}
-          <div className="mt-3 flex items-baseline gap-6">
+          <div className="mt-3 flex flex-col sm:flex-row sm:items-baseline gap-3 sm:gap-6">
             <div>
-              <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+              <div className="text-[10px] sm:text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
                 Net Work Duration
               </div>
-              <div className="text-3xl font-extrabold font-mono text-slate-900 dark:text-white tracking-tight mt-0.5">
+              <div className="text-2xl sm:text-3xl font-extrabold font-mono text-slate-900 dark:text-white tracking-tight mt-0.5">
                 {state.status === "WORKING" || state.status === "ON_BREAK"
                   ? formatDurationTimer(netWorkSeconds)
                   : state.status === "COMPLETED" && state.todaySessions[0]
@@ -243,7 +243,7 @@ export function WorkSessionWidget({ onAddWorkLogClick, onSessionChange }: WorkSe
             </div>
 
             {(state.status === "WORKING" || state.status === "ON_BREAK") && (
-              <div className="border-l border-slate-200 dark:border-slate-800 pl-6 space-y-1">
+              <div className="sm:border-l border-slate-200 dark:border-slate-800 sm:pl-6 space-y-1 pt-2 sm:pt-0 border-t sm:border-t-0">
                 <div className="text-xs text-slate-500 flex items-center gap-2">
                   <span className="w-20">Total Session:</span>
                   <span className="font-mono font-medium text-slate-700 dark:text-slate-300">
@@ -268,13 +268,13 @@ export function WorkSessionWidget({ onAddWorkLogClick, onSessionChange }: WorkSe
         </div>
 
         {/* Right: State-dependent action buttons */}
-        <div className="flex flex-wrap items-center gap-2.5">
+        <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 w-full md:w-auto mt-4 md:mt-0">
           {/* NOT STARTED STATE */}
           {state.status === "NOT_STARTED" && (
             <button
               onClick={handleStartWork}
               disabled={actionLoading || loading}
-              className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm rounded-lg shadow-sm hover:shadow transition flex items-center gap-2 disabled:opacity-50"
+              className="col-span-2 sm:col-auto px-5 py-3 sm:py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm rounded-lg shadow-sm hover:shadow transition flex items-center justify-center gap-2 disabled:opacity-50 min-h-[44px]"
             >
               <Play className="w-4 h-4 fill-white" />
               Start Work
@@ -286,7 +286,7 @@ export function WorkSessionWidget({ onAddWorkLogClick, onSessionChange }: WorkSe
             <>
               <button
                 onClick={onAddWorkLogClick}
-                className="px-4 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 font-semibold text-xs rounded-lg transition flex items-center gap-1.5"
+                className="col-span-2 sm:col-auto px-4 py-2.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 font-semibold text-xs rounded-lg transition flex items-center justify-center gap-1.5 min-h-[44px]"
               >
                 <PlusCircle className="w-4 h-4" />
                 Add Work Log
@@ -295,7 +295,7 @@ export function WorkSessionWidget({ onAddWorkLogClick, onSessionChange }: WorkSe
               <button
                 onClick={() => setShowBreakModal(true)}
                 disabled={actionLoading}
-                className="px-4 py-2 bg-amber-50 hover:bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 font-semibold text-xs rounded-lg transition flex items-center gap-1.5 disabled:opacity-50"
+                className="px-4 py-2.5 bg-amber-50 hover:bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 font-semibold text-xs rounded-lg transition flex items-center justify-center gap-1.5 disabled:opacity-50 min-h-[44px]"
               >
                 <Coffee className="w-4 h-4" />
                 Start Break
@@ -304,7 +304,7 @@ export function WorkSessionWidget({ onAddWorkLogClick, onSessionChange }: WorkSe
               <button
                 onClick={() => setShowEndModal(true)}
                 disabled={actionLoading}
-                className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white dark:bg-slate-800 dark:hover:bg-slate-700 font-semibold text-xs rounded-lg transition flex items-center gap-1.5 disabled:opacity-50"
+                className="px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white dark:bg-slate-800 dark:hover:bg-slate-700 font-semibold text-xs rounded-lg transition flex items-center justify-center gap-1.5 disabled:opacity-50 min-h-[44px]"
               >
                 <Square className="w-3.5 h-3.5 fill-white" />
                 End Work
@@ -318,7 +318,7 @@ export function WorkSessionWidget({ onAddWorkLogClick, onSessionChange }: WorkSe
               <button
                 onClick={handleEndBreak}
                 disabled={actionLoading}
-                className="px-5 py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-semibold text-sm rounded-lg shadow-sm transition flex items-center gap-2 disabled:opacity-50 animate-pulse"
+                className="col-span-2 sm:col-auto px-5 py-3 sm:py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-semibold text-sm rounded-lg shadow-sm transition flex items-center justify-center gap-2 disabled:opacity-50 animate-pulse min-h-[44px]"
               >
                 <Play className="w-4 h-4 fill-white" />
                 Resume Work
@@ -327,21 +327,21 @@ export function WorkSessionWidget({ onAddWorkLogClick, onSessionChange }: WorkSe
               <button
                 onClick={() => setShowEndModal(true)}
                 disabled={actionLoading}
-                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-300 font-medium text-xs rounded-lg transition disabled:opacity-50"
+                className="col-span-2 sm:col-auto px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-300 font-medium text-xs rounded-lg transition disabled:opacity-50 min-h-[44px]"
               >
-                End Work
+                End Work Anyway
               </button>
             </>
           )}
 
           {/* COMPLETED STATE */}
           {state.status === "COMPLETED" && (
-            <div className="flex items-center gap-2">
+            <div className="col-span-2 sm:col-auto flex flex-col sm:flex-row items-center gap-2 w-full">
               <span className="text-xs text-slate-500">Day finalized.</span>
               <button
                 onClick={handleStartWork}
                 disabled={actionLoading}
-                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 dark:bg-slate-800 dark:text-slate-200 font-semibold text-xs rounded-lg transition"
+                className="w-full sm:w-auto px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 dark:bg-slate-800 dark:text-slate-200 font-semibold text-xs rounded-lg transition min-h-[44px]"
               >
                 Start Another Session
               </button>

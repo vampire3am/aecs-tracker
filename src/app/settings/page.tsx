@@ -2,13 +2,20 @@
 
 import { useState, useEffect } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
-import { Settings as SettingsIcon, User, Globe, Bell, Shield, CheckCircle } from "lucide-react";
+import { Settings as SettingsIcon, User, Globe, Bell, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
 
 export default function SettingsPage() {
   const [user, setUser] = useState<any | null>(null);
   const [timezone, setTimezone] = useState("UTC");
   const [workLocation, setWorkLocation] = useState("REMOTE");
+  const [sessionReminders, setSessionReminders] = useState(true);
+  const [deadlineAlerts, setDeadlineAlerts] = useState(true);
+  const [blockerAlerts, setBlockerAlerts] = useState(true);
+  const [weeklyReportReminders, setWeeklyReportReminders] = useState(true);
+
+  const [saving, setSaving] = useState(false);
   const [savedMsg, setSavedMsg] = useState<string | null>(null);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   useEffect(() => {
     fetch("/api/auth/me")
@@ -18,14 +25,60 @@ export default function SettingsPage() {
           setUser(data.user);
           setTimezone(data.user.timezone || "UTC");
           setWorkLocation(data.user.workLocation || "REMOTE");
+
+          if (data.user.notificationPref) {
+            setSessionReminders(data.user.notificationPref.sessionReminders ?? true);
+            setDeadlineAlerts(data.user.notificationPref.deadlineAlerts ?? true);
+            setBlockerAlerts(data.user.notificationPref.blockerAlerts ?? true);
+            setWeeklyReportReminders(data.user.notificationPref.weeklyReportReminders ?? true);
+          }
         }
       });
   }, []);
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSavedMsg("Settings saved successfully!");
-    setTimeout(() => setSavedMsg(null), 3000);
+    setSaving(true);
+    setSavedMsg(null);
+    setErrorMsg(null);
+
+    try {
+      const res = await fetch("/api/auth/me", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          timezone,
+          workLocation,
+          notificationPreferences: {
+            sessionReminders,
+            deadlineAlerts,
+            blockerAlerts,
+            weeklyReportReminders,
+          },
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to save preferences to database");
+      }
+
+      setSavedMsg("Preferences saved successfully to database!");
+      setUser(data.user);
+
+      // Dispatch event to immediately sync Header clock and sidebar
+      window.dispatchEvent(
+        new CustomEvent("user-settings-updated", {
+          detail: { timezone, workLocation },
+        })
+      );
+
+      setTimeout(() => setSavedMsg(null), 4000);
+    } catch (err: any) {
+      setErrorMsg(err.message || "An error occurred while saving.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -45,6 +98,13 @@ export default function SettingsPage() {
           <div className="p-3 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 rounded-lg text-xs text-emerald-800 dark:text-emerald-300 flex items-center gap-2">
             <CheckCircle className="w-4 h-4 shrink-0" />
             <span>{savedMsg}</span>
+          </div>
+        )}
+
+        {errorMsg && (
+          <div className="p-3 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 rounded-lg text-xs text-rose-800 dark:text-rose-300 flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 shrink-0" />
+            <span>{errorMsg}</span>
           </div>
         )}
 
@@ -102,14 +162,14 @@ export default function SettingsPage() {
                 <select
                   value={timezone}
                   onChange={(e) => setTimezone(e.target.value)}
-                  className="w-full p-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-mono"
+                  className="w-full p-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 >
+                  <option value="Asia/Kathmandu">Asia/Kathmandu (NPT)</option>
+                  <option value="Asia/Kolkata">Asia/Kolkata (IST)</option>
                   <option value="America/New_York">America/New_York (EST/EDT)</option>
                   <option value="America/Los_Angeles">America/Los_Angeles (PST/PDT)</option>
                   <option value="Europe/London">Europe/London (GMT/BST)</option>
                   <option value="Europe/Paris">Europe/Paris (CET/CEST)</option>
-                  <option value="Asia/Kolkata">Asia/Kolkata (IST)</option>
-                  <option value="Asia/Kathmandu">Asia/Kathmandu (NPT)</option>
                   <option value="Asia/Tokyo">Asia/Tokyo (JST)</option>
                   <option value="UTC">UTC</option>
                 </select>
@@ -125,7 +185,7 @@ export default function SettingsPage() {
                 <select
                   value={workLocation}
                   onChange={(e) => setWorkLocation(e.target.value)}
-                  className="w-full p-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                  className="w-full p-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 >
                   <option value="REMOTE">Remote</option>
                   <option value="OFFICE">Office</option>
@@ -144,28 +204,48 @@ export default function SettingsPage() {
 
             <div className="space-y-3 text-xs">
               <label className="flex items-center gap-2.5 cursor-pointer">
-                <input type="checkbox" defaultChecked className="rounded text-indigo-600 focus:ring-indigo-500" />
+                <input
+                  type="checkbox"
+                  checked={sessionReminders}
+                  onChange={(e) => setSessionReminders(e.target.checked)}
+                  className="rounded text-indigo-600 focus:ring-indigo-500"
+                />
                 <span className="text-slate-700 dark:text-slate-300 font-medium">
                   Reminder if work session is left running after 8 hours
                 </span>
               </label>
 
               <label className="flex items-center gap-2.5 cursor-pointer">
-                <input type="checkbox" defaultChecked className="rounded text-indigo-600 focus:ring-indigo-500" />
+                <input
+                  type="checkbox"
+                  checked={deadlineAlerts}
+                  onChange={(e) => setDeadlineAlerts(e.target.checked)}
+                  className="rounded text-indigo-600 focus:ring-indigo-500"
+                />
                 <span className="text-slate-700 dark:text-slate-300 font-medium">
                   Notification on upcoming sprint task deadlines
                 </span>
               </label>
 
               <label className="flex items-center gap-2.5 cursor-pointer">
-                <input type="checkbox" defaultChecked className="rounded text-indigo-600 focus:ring-indigo-500" />
+                <input
+                  type="checkbox"
+                  checked={blockerAlerts}
+                  onChange={(e) => setBlockerAlerts(e.target.checked)}
+                  className="rounded text-indigo-600 focus:ring-indigo-500"
+                />
                 <span className="text-slate-700 dark:text-slate-300 font-medium">
                   Alert when an open blocker is resolved or updated
                 </span>
               </label>
 
               <label className="flex items-center gap-2.5 cursor-pointer">
-                <input type="checkbox" defaultChecked className="rounded text-indigo-600 focus:ring-indigo-500" />
+                <input
+                  type="checkbox"
+                  checked={weeklyReportReminders}
+                  onChange={(e) => setWeeklyReportReminders(e.target.checked)}
+                  className="rounded text-indigo-600 focus:ring-indigo-500"
+                />
                 <span className="text-slate-700 dark:text-slate-300 font-medium">
                   Weekly report compilation reminder on Friday afternoon
                 </span>
@@ -176,9 +256,11 @@ export default function SettingsPage() {
           <div className="flex justify-end">
             <button
               type="submit"
-              className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs rounded-lg shadow-sm transition"
+              disabled={saving}
+              className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs rounded-lg shadow-sm transition flex items-center gap-2 disabled:opacity-50"
             >
-              Save Preferences
+              {saving && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+              {saving ? "Saving to Database..." : "Save Preferences"}
             </button>
           </div>
         </form>

@@ -26,6 +26,13 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     fetchUser();
+
+    const handleSettingsUpdated = () => {
+      fetchUser();
+    };
+
+    window.addEventListener("user-settings-updated", handleSettingsUpdated);
+    return () => window.removeEventListener("user-settings-updated", handleSettingsUpdated);
   }, []);
 
   return (
